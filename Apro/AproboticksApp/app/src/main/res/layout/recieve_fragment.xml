@@ -14,7 +14,7 @@
         android:layout_gravity="center"
         app:contentPadding="12dp">
 
-        <LinearLayout
+        <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
@@ -152,6 +152,6 @@
                     android:layout_marginHorizontal="14dp"
                     android:background="@android:color/transparent" />
             </LinearLayout>
-        </LinearLayout>
+        </androidx.recyclerview.widget.RecyclerView>
     </com.google.android.material.card.MaterialCardView>
 </FrameLayout>

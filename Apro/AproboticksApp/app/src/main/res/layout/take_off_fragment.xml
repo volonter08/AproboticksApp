@@ -47,6 +47,7 @@
                     android:background="@drawable/drawable_for_input_layout"
                     >
                     <EditText
+                        android:id="@+id/takin_off_articul"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
@@ -79,6 +80,7 @@
                 android:background="@drawable/drawable_for_input_layout"
                 >
                 <EditText
+                    android:id="@+id/taking_off_nomenclature"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"

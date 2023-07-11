@@ -1,4 +1,4 @@
-package com.example.aproboticksapp
+package com.example.aproboticksapp.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
+import com.example.aproboticksapp.Flaw
+import com.example.aproboticksapp.FlawAdapter
 import com.example.aproboticksapp.databinding.ControlQualityFragmentBinding
 import java.util.*
 

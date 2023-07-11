@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF613B"
-    android:paddingHorizontal="50dp"
-    android:paddingVertical="80dp"
+    android:background="@drawable/gradient_page_allowed_actions"
+    android:paddingHorizontal="20dp"
+    android:paddingVertical="20dp"
     >
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
         app:contentPadding="12dp">
 
@@ -19,49 +19,51 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
+                android:gravity="center_horizontal"
                 android:fontFamily="sans-serif-black"
+                android:layout_marginTop="20dp"
                 android:text="Доступные действия"
                 android:textSize="30sp" />
             <com.google.android.material.button.MaterialButton
                 style="@style/Widget.Material3.Button.Icon"
                 android:layout_width="200dp"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
+                android:backgroundTint="#4813AE"
                 android:text="Принять МЦ"
-                android:backgroundTint="@color/blue_secondary"
                 android:textColor="@color/white"
                 app:icon="@drawable/baseline_add_24"
                 app:iconTint="@color/white" />
             <com.google.android.material.button.MaterialButton
                 style="@style/Widget.Material3.Button.Icon"
                 android:layout_width="200dp"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
-                android:backgroundTint="@color/green"
+                android:backgroundTint="#8807A8"
                 android:text="Снять со склада МЦ"
                 android:textColor="@color/white"
                 app:icon="@drawable/baseline_remove_24"
-                app:iconTint="@color/black" />
+                app:iconTint="@color/white" />
             <com.google.android.material.button.MaterialButton
                 style="@style/Widget.Material3.Button.Icon"
                 android:layout_width="200dp"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
-                android:backgroundTint="@color/green"
                 android:text="Переместить МЦ"
-                android:textColor="@color/white"
+                android:backgroundTint="#E2FA03"
+                android:textColor="@color/black"
                 app:icon="@drawable/baseline_arrow_right_alt_24"
                 app:iconTint="@color/black" />
             <com.google.android.material.button.MaterialButton
                 style="@style/Widget.Material3.Button.Icon"
                 android:layout_width="200dp"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
                 android:text="Контроль качества"
