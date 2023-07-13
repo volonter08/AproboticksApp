@@ -7,13 +7,13 @@ import androidx.fragment.app.commit
 import androidx.lifecycle.MutableLiveData
 import com.example.aproboticksapp.databinding.ActivityMainBinding
 import com.example.aproboticksapp.fragments.*
-import com.example.aproboticksapp.websocket.TsdStatus
-import com.example.aproboticksapp.websocket.TsdWebSocketListener
+import com.example.aproboticksapp.network.Utils
+import com.example.aproboticksapp.requests.HttpRequestManager
+import com.example.aproboticksapp.requests.OnRequestListener
+import com.example.aproboticksapp.websocket.WebSocketManager
+import com.google.gson.GsonBuilder
 import kotlinx.coroutines.*
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.WebSocket
-import org.json.JSONObject
+import okhttp3.*
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -41,30 +41,73 @@ class MainActivity : AppCompatActivity() {
             KEYCODE_RIGHT_TRIGGER_BUTTON
         )
 
-        const val URLBASE = "://192.168.8.54:5555/"
     }
 
     var isBusyTsd = MutableLiveData<Boolean>()
-    var tsdStatus = TsdStatus()
     val client = OkHttpClient()
-    var webSocketListener = TsdWebSocketListener(tsdStatus)
-    private var webSocket: WebSocket? = null
+    val webSocketManager =
+        WebSocketManager(client, onActivityReceiveMessage = ::onActivityReceiveMessage)
+    lateinit var httpRequestManager: HttpRequestManager
+    val onRequestListener = object : OnRequestListener {
+        override fun onRequestOnCreate(
+            status: Boolean,
+            isComp: Boolean,
+            id: String,
+            isLoggedIn: Boolean,
+            user: User?
+        ) {
+            if (status) {
+                webSocketManager.connectWebSocket(id)
+                if (isComp) {
+                    GlobalScope.launch(Dispatchers.Main) {
+                        supportFragmentManager.commit {
+                            replace(
+                                R.id.fragment_container_view_tag,
+                                FromComputerFragment(
+                                    webSocketManager
+                                )
+                            )
+                        }
+                    }
+                } else {
+                    if (!isLoggedIn)
+                        supportFragmentManager.commit {
+                            replace(
+                                R.id.fragment_container_view_tag,
+                                SignInFragment(httpRequestManager)
+                            )
+                        }
+                    else {
+                        supportFragmentManager.commit {
+                            replace(
+                                R.id.fragment_container_view_tag,
+                                AllowedActionsFragment(user,httpRequestManager)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+    init {
+        httpRequestManager = HttpRequestManager(client,onRequestListener)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setScanSetting()
-        val receivingFragment = ReceivingFragment()
-        val takingOffFragment = TakingOffFragment()
-        val signInFragment = SignInFragment()
-        val controlQualityFragment = ControlQualityFragment()
-        val allowedActionsFragment = AllowedActionsFragment()
+        CoroutineScope(Dispatchers.Main).launch {
+            httpRequestManager.requestOnCreate()
+        }
     }
+
     override fun onStart() {
         super.onStart()
-        CoroutineScope(Dispatchers.Main).launch {
-            requestOnOpen()
-        }
+        val gson = GsonBuilder().create()
+        val ip = Utils.getIPAddress(true)
+        webSocketManager.webSocket?.send( gson.toJson(CodeObject(11, DataObject(ip))))
     }
     fun setScanSetting() {
         for (key in (TRIGGER_KEY)) {
@@ -80,13 +123,15 @@ class MainActivity : AppCompatActivity() {
         this.sendBroadcast(intent)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
+    override fun onStop() {
+        val gson = GsonBuilder().create()
+        val ip = Utils.getIPAddress(true)
+        webSocketManager.webSocket?.send(gson.toJson(CodeObject(101, DataObject(ip))))
+        super.onStop()
     }
-
+    /*
     suspend fun requestOnOpen() {
-        val urlCheckBinding = "http://" + URLBASE + "API/check-binding"
+        val urlCheckBinding = "http://192.168.8.54:8000/API/THD-lock"
         val request = Request.Builder().url(urlCheckBinding).build()
         isBusyTsd.value = CoroutineScope(Dispatchers.IO).async {
             val responses = client.newCall(request).execute()
@@ -95,29 +140,54 @@ class MainActivity : AppCompatActivity() {
                 val jObject = jsonData?.let {
                     JSONObject(it)
                 }
+                Log.d("Jobject",jObject.toString())
                 if (jObject != null) {
                     val obj = jObject as JSONObject
-                    val status = obj.getBoolean("is_comp")
-                    webSocket = client.newWebSocket(
-                        createWebSocketRequest(obj.getString("id")),
-                        webSocketListener
-                    )
+                    val status = obj.getBoolean("status")
                     if (status) {
-                        withContext(Dispatchers.Main) {
-                            supportFragmentManager.commit {
-                                add(
-                                    R.id.fragment_container_view_tag,
-                                    FromComputerFragment(tsdStatus.action)
-                                )
+                        val isComp = obj.getBoolean("is_comp")
+                        val id  = obj.getString("id")
+                        webSocketManager.connectWebSocket(id)
+                        if (isComp) {
+                            withContext(Dispatchers.Main) {
+                                supportFragmentManager.commit {
+                                    replace(
+                                        R.id.fragment_container_view_tag,
+                                        FromComputerFragment(webSocketManager.tsdStatusWebSocket.action,webSocketManager.webSocket!!)
+                                    )
+                                }
+                            }
+                        } else {
+                            val isLoggedIn = obj.getBoolean("is_logged_in")
+                            if (!isLoggedIn)
+                                supportFragmentManager.commit {
+                                    replace(
+                                        R.id.fragment_container_view_tag,
+                                        SignInFragment()
+                                    )
+                                }
+                            else {
+                                val loginObject = obj.getJSONObject("login")
+                                val id  = loginObject.getString("id")
+                                val name = loginObject.getString("name")
+                                val storageRight = loginObject.getBoolean("storage_right")
+                                val planRight =  loginObject.getBoolean("plan_right")
+                                val qualityControlRight =  loginObject.getBoolean("quality_control_right")
+                                val user = User(id,name,storageRight,planRight,qualityControlRight)
+                                supportFragmentManager.commit {
+                                    replace(
+                                        R.id.fragment_container_view_tag,
+                                        AllowedActionsFragment(user)
+                                    )
+                                }
                             }
                         }
-                    } else
-                        supportFragmentManager.commit {
-                            add(
-                                R.id.fragment_container_view_tag,
-                                SignInFragment()
-                            )
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@MainActivity, "ТСД занято!", Toast.LENGTH_LONG)
+                                .show()
                         }
+                    }
                     return@async status
                 } else return@async false
             } catch (e: Exception) {
@@ -126,10 +196,31 @@ class MainActivity : AppCompatActivity() {
         }.await()
     }
 
+
+
     private fun createWebSocketRequest(id: String): Request {
-        val websocketURL = "ws://192.168.8.54:5555/ws/THD-ws/$id"
+        val websocketURL = "ws://192.168.8.54:8000/ws/THD-ws/$id"
         return Request.Builder()
             .url(websocketURL)
             .build()
+    }
+
+     */
+
+    private fun onActivityReceiveMessage(code: Int) {
+        when (code) {
+            0 -> supportFragmentManager.commit {
+                replace(
+                    R.id.fragment_container_view_tag,
+                    FromComputerFragment(webSocketManager)
+                )
+            }
+            1010->supportFragmentManager.commit {
+                replace(
+                    R.id.fragment_container_view_tag,
+                    SignInFragment(httpRequestManager)
+                )
+            }
+        }
     }
 }

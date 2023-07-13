@@ -24,23 +24,9 @@
             android:fontFamily="sans-serif-black"
             android:text="Отсканируйте пропуск для входа"
             android:textSize="30sp" />
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/scan_button"
-            style="@style/Widget.Material3.Button.Icon"
-            android:layout_width="wrap_content"
-            android:layout_height="180dp"
-            android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginTop="20dp"
-            android:text="Отсканировать пропуск"
-            android:textColor="@color/black"
-            android:textSize="24sp"
-            app:icon="@drawable/_06926"
-            app:iconSize="66dp"
-            app:iconTint="@color/black"
-            app:cornerRadius="16dp"
-            />
+
         <ProgressBar
-            android:visibility="visible"
+            android:visibility="gone"
             android:id="@+id/progressbar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

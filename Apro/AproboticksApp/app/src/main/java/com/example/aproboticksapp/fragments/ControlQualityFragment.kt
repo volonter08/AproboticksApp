@@ -6,8 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
-import com.example.aproboticksapp.Flaw
-import com.example.aproboticksapp.FlawAdapter
+import com.example.aproboticksapp.list_flaw.Flaw
+import com.example.aproboticksapp.list_flaw.FlawAdapter
 import com.example.aproboticksapp.databinding.ControlQualityFragmentBinding
 import java.util.*
 
