@@ -1,8 +1,13 @@
 package com.example.aproboticksapp
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.LinkProperties
+import android.net.wifi.WifiManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.commit
 import androidx.lifecycle.MutableLiveData
 import com.example.aproboticksapp.databinding.ActivityMainBinding
@@ -14,6 +19,7 @@ import com.example.aproboticksapp.websocket.WebSocketManager
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.*
 import okhttp3.*
+import kotlin.math.absoluteValue
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -50,6 +56,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var httpRequestManager: HttpRequestManager
     val onRequestListener = object : OnRequestListener {
         override fun onRequestOnCreate(
+            ipServer: String,
             status: Boolean,
             isComp: Boolean,
             id: String,
@@ -57,7 +64,7 @@ class MainActivity : AppCompatActivity() {
             user: User?
         ) {
             if (status) {
-                webSocketManager.connectWebSocket(id)
+                webSocketManager.connectWebSocket(id,ipServer)
                 if (isComp) {
                     GlobalScope.launch(Dispatchers.Main) {
                         supportFragmentManager.commit {
@@ -90,13 +97,16 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
-    init {
-        httpRequestManager = HttpRequestManager(client,onRequestListener)
-    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        httpRequestManager = HttpRequestManager(applicationContext,client,onRequestListener)
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE)
+        if (connectivityManager is ConnectivityManager) {
+            var link: LinkProperties =  connectivityManager.getLinkProperties(connectivityManager.activeNetwork) as LinkProperties
+            println(link.linkAddresses.toString())
+        }
         setScanSetting()
         CoroutineScope(Dispatchers.Main).launch {
             httpRequestManager.requestOnCreate()

@@ -1,5 +1,6 @@
-package com.example.aproboticksapp
+package com.example.aproboticksapp.fragments
 
+import android.R
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -12,24 +13,24 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.example.aproboticksapp.MainActivity.Companion.BROADCAST_ACTION
-import com.example.aproboticksapp.databinding.TakeOffFragmentBinding
+import com.example.aproboticksapp.MainActivity
+import com.example.aproboticksapp.databinding.ReplaceFragmentBinding
 import com.example.aproboticksapp.requests.HttpRequestManager
 
 
-class TakingOffFragment(val httpRequestManager: HttpRequestManager) : Fragment() {
-    private lateinit var takingOffFragmentReceiver: BroadcastReceiver
-    private var idCrate: String? = null
+class ReplacingFragment(val httpRequestManager: HttpRequestManager) : Fragment() {
+    private lateinit var replacingReceiver: BroadcastReceiver
+    private var idCrate:String? = null
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         super.onCreateView(inflater, container, savedInstanceState)
-        val takeOffFragmentBinding = TakeOffFragmentBinding.inflate(inflater)
+        val replaceFragmentBinding = ReplaceFragmentBinding.inflate(inflater)
         val simpleArray = arrayOf("Производство", "Брак")
         val adapter = ArrayAdapter<String>(
-            requireContext(), android.R.layout.simple_dropdown_item_1line, simpleArray
+            requireContext(), R.layout.simple_dropdown_item_1line, simpleArray
         )
         val filter =
             InputFilter { src, start, end, d, dstart, dend ->
@@ -40,40 +41,40 @@ class TakingOffFragment(val httpRequestManager: HttpRequestManager) : Fragment()
                 }
                 return@InputFilter src.subSequence(start, end)
             }
-        takeOffFragmentBinding.amountDetail.filters = arrayOf(filter)
-        takeOffFragmentBinding.takeOffButton.setOnClickListener {
+        replaceFragmentBinding.numberCell.filters = arrayOf(filter)
+        replaceFragmentBinding.replaceButton.setOnClickListener {
             when {
-                (idCrate == null) -> {
+                (idCrate==null) -> {
                     Toast.makeText(
                         requireContext(),
                         "Отсканируйте штрих-код коробки!",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
-                (takeOffFragmentBinding.amountDetail.text == null) -> {
+                replaceFragmentBinding.numberCell.text == null -> {
                     Toast.makeText(requireContext(), "Введите кол-во деталей!", Toast.LENGTH_SHORT)
                         .show()
                 }
                 else -> {
-                    httpRequestManager.requestTakeOff(idCrate!!,takeOffFragmentBinding.amountDetail.text.toString().toInt())
-                    takeOffFragmentBinding.amountDetail.text.clear()
+                    httpRequestManager.requestReplace(idCrate!!,replaceFragmentBinding.numberCell.text.toString().toInt())
                     idCrate = null
-                    takeOffFragmentBinding.idCrate.text = null
+                    replaceFragmentBinding.idCrate.text= null
+                    replaceFragmentBinding.numberCell.text = null
                 }
             }
         }
-        takingOffFragmentReceiver = object : BroadcastReceiver() {
+        replacingReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 idCrate = intent?.getStringExtra("EXTRA_BARCODE_DECODING_DATA")
-                takeOffFragmentBinding.idCrate.setText(idCrate)
+                replaceFragmentBinding.idCrate.setText(idCrate)
             }
         }
-        val intentFilter = IntentFilter(BROADCAST_ACTION)
-        requireContext().registerReceiver(takingOffFragmentReceiver, intentFilter)
-        return takeOffFragmentBinding.root
+        val intentFilter = IntentFilter(MainActivity.BROADCAST_ACTION)
+        requireContext().registerReceiver(replacingReceiver, intentFilter)
+        return replaceFragmentBinding.root
     }
     override fun onDestroyView() {
-        requireContext().unregisterReceiver(takingOffFragmentReceiver)
+        requireContext().unregisterReceiver(replacingReceiver)
         super.onDestroyView()
     }
 }

@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import com.example.aproboticksapp.databinding.RecieveFragmentBinding
 
 class ReceivingFragment : Fragment(){
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#5FCEDE"
-    android:paddingHorizontal="40dp"
-    android:paddingVertical="60dp">
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="12dp"
+    >
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -15,10 +17,11 @@
             android:id="@+id/list_flaw"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#FFDCCA"
+            android:background="#c2c2c2"
             android:orientation="vertical"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            android:padding="20dp">
+            android:padding="20dp"
+            tools:listitem="@layout/item_list_flaw">
         </androidx.recyclerview.widget.RecyclerView>
     </com.google.android.material.card.MaterialCardView>
 </FrameLayout>

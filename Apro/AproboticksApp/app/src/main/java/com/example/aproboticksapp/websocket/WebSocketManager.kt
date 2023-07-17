@@ -15,19 +15,20 @@ import okhttp3.Request
 import okhttp3.WebSocket
 
 class WebSocketManager(val client:OkHttpClient,val onActivityReceiveMessage:(Int)->Unit) {
+
     var tsdStatusWebSocket = TsdStatusWebSocket()
     var webSocketListener = TsdWebSocketListener(onActivityReceiveMessage)
     var webSocket: WebSocket? = null
 
-    private fun createWebSocketRequest(id: String): Request {
-        val websocketURL = "ws://192.168.8.54:8000/ws/THD-ws/$id"
+    private fun createWebSocketRequest(id: String,ipServer:String): Request {
+        val websocketURL = "ws://$ipServer:8000/ws/THD-ws/$id"
         return Request.Builder()
             .url(websocketURL)
             .build()
     }
-    fun connectWebSocket(id:String){
+    fun connectWebSocket(id:String,ipServer: String){
         webSocket = client.newWebSocket(
-            createWebSocketRequest(id),
+            createWebSocketRequest(id,ipServer),
             webSocketListener
         )
     }

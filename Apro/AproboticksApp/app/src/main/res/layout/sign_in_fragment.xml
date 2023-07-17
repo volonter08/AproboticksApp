@@ -6,15 +6,11 @@
     android:background="@drawable/gradient_sign_in"
     android:paddingHorizontal="20dp"
     android:paddingVertical="20dp">
-
-
-
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
         app:contentPadding="12dp">
-
         <TextView
             android:id="@+id/notification_text_view"
             android:layout_width="wrap_content"
