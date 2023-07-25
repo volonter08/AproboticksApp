@@ -2,10 +2,14 @@ package com.example.aproboticksapp.requests
 
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import com.example.aproboticksapp.User
 import com.example.aproboticksapp.network.Utils
+import com.google.gson.Gson
 import kotlinx.coroutines.*
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.net.ConnectException
 import java.net.InetAddress
@@ -31,6 +35,9 @@ class HttpRequestManager(
             try {
                 response = client.newCall(request).execute()
             } catch (e: java.lang.Exception) {
+                withContext(Dispatchers.Main){
+                    onRequestListener.onFindServer()
+                }
                 findServer()
                 urlCheckBinding = httpURL + "API/THD-lock"
                 response = client.newCall(Request.Builder().url(urlCheckBinding).build()).execute()
@@ -142,13 +149,12 @@ class HttpRequestManager(
                             val jsonObject = jsonData?.let {
                                 JSONObject(it)
                             }
-                            if(jsonObject!= null && jsonObject.getBoolean("status")) {
+                            if (jsonObject != null && jsonObject.getBoolean("status")) {
                                 ipServer = testIp
                                 httpURL = "http://$ipServer:$PORT/"
                                 prefs.edit().putString("ip_server", ipServer).apply()
                                 return
-                            }
-                            else continue
+                            } else continue
                         } catch (e: Exception) {
                             continue
                         }
@@ -161,23 +167,47 @@ class HttpRequestManager(
     }
 
     fun requestTakeOff(id: String, amount: Int) {
-        val urlLogout = httpURL + "API/crate/$id"
+        val urlLogout = httpURL + "API/crate/$id/"
         val formBody: RequestBody = FormBody.Builder()
-            .add("amount",amount.toString())
+            .add("amount", amount.toString())
             .build()
-        val request = Request.Builder().url(urlLogout).post(formBody).build()
+
+        val request = Request.Builder().url(urlLogout).patch(("{\"amount\":$amount}").toRequestBody("application/json".toMediaType())).build()
         GlobalScope.launch(Dispatchers.IO) {
-            client.newCall(request).execute().close()
+            client.newCall(request).execute().use { response ->
+                response.body?.string()?.let {
+                    val jsonObject = JSONObject(it)
+                    val status = jsonObject.getBoolean("status")
+                    if (!status) {
+                        val errorMessage = jsonObject.getString("error")
+                        withContext(Dispatchers.Main) {
+                            onRequestListener.onRequestShowToast(errorMessage)
+                        }
+                    }
+                }
+            }
         }
     }
-    fun requestReplace(id:String,idCell:Int){
-        val urlLogout = httpURL + "API/move-crate/$id"
+
+    fun requestReplace(id: String, idCell: Int) {
+        val urlLogout = httpURL + "API/move-crate/$id/"
         val formBody: RequestBody = FormBody.Builder()
-            .add("cell",idCell.toString())
+            .add("cell", idCell.toString())
             .build()
-        val request = Request.Builder().url(urlLogout).post(formBody).build()
+        val request = Request.Builder().url(urlLogout).patch(("{\"cell\":$idCell}").toRequestBody("application/json".toMediaType())).build()
         GlobalScope.launch(Dispatchers.IO) {
-            client.newCall(request).execute().close()
+            client.newCall(request).execute().use { response ->
+                response.body?.string()?.let {
+                    val jsonObject = JSONObject(it)
+                    val status = jsonObject.getBoolean("status")
+                    if (!status) {
+                        val errorMessage = jsonObject.getString("error")
+                        withContext(Dispatchers.Main) {
+                            onRequestListener.onRequestShowToast(errorMessage)
+                        }
+                    }
+                }
+            }
         }
     }
 }

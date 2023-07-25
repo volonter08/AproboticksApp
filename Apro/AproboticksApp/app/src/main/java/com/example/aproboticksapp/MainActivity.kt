@@ -8,6 +8,8 @@ import android.net.wifi.WifiManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.Toast
 import androidx.fragment.app.commit
 import androidx.lifecycle.MutableLiveData
 import com.example.aproboticksapp.databinding.ActivityMainBinding
@@ -51,62 +53,73 @@ class MainActivity : AppCompatActivity() {
 
     var isBusyTsd = MutableLiveData<Boolean>()
     val client = OkHttpClient()
-    val webSocketManager =
-        WebSocketManager(client, onActivityReceiveMessage = ::onActivityReceiveMessage)
-    lateinit var httpRequestManager: HttpRequestManager
-    val onRequestListener = object : OnRequestListener {
-        override fun onRequestOnCreate(
-            ipServer: String,
-            status: Boolean,
-            isComp: Boolean,
-            id: String,
-            isLoggedIn: Boolean,
-            user: User?
-        ) {
-            if (status) {
-                webSocketManager.connectWebSocket(id,ipServer)
-                if (isComp) {
-                    GlobalScope.launch(Dispatchers.Main) {
-                        supportFragmentManager.commit {
-                            replace(
-                                R.id.fragment_container_view_tag,
-                                FromComputerFragment(
-                                    webSocketManager
+   //val webSocketManager =
+      //  WebSocketManager(client, onActivityReceiveMessage = ::onActivityReceiveMessage)
+   // lateinit var httpRequestManager: HttpRequestManager
+   lateinit var glSurfaceView:AproboticsOpenGLView
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        glSurfaceView = AproboticsOpenGLView(this)
+        setContentView(glSurfaceView)
+    }
+    override fun onResume() {
+        super.onResume()
+        glSurfaceView.onResume()
+    }
+      /*  super.onCreate(savedInstanceState)
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        val onRequestListener = object : OnRequestListener {
+            override fun onRequestOnCreate(
+                ipServer: String,
+                status: Boolean,
+                isComp: Boolean,
+                id: String,
+                isLoggedIn: Boolean,
+                user: User?
+            ) {
+                if (status) {
+                    webSocketManager.connectWebSocket(id,ipServer)
+                    if (isComp) {
+                        GlobalScope.launch(Dispatchers.Main) {
+                            supportFragmentManager.commit {
+                                replace(
+                                    R.id.fragment_container_view_tag,
+                                    FromComputerFragment(
+                                        webSocketManager
+                                    )
                                 )
-                            )
+                            }
                         }
-                    }
-                } else {
-                    if (!isLoggedIn)
-                        supportFragmentManager.commit {
-                            replace(
-                                R.id.fragment_container_view_tag,
-                                SignInFragment(httpRequestManager)
-                            )
-                        }
-                    else {
-                        supportFragmentManager.commit {
-                            replace(
-                                R.id.fragment_container_view_tag,
-                                AllowedActionsFragment(user,httpRequestManager)
-                            )
+                    } else {
+                        if (!isLoggedIn)
+                            supportFragmentManager.commit {
+                                replace(
+                                    R.id.fragment_container_view_tag,
+                                    SignInFragment(httpRequestManager)
+                                )
+                            }
+                        else {
+                            supportFragmentManager.commit {
+                                replace(
+                                    R.id.fragment_container_view_tag,
+                                    AllowedActionsFragment(user,httpRequestManager)
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-    }
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        httpRequestManager = HttpRequestManager(applicationContext,client,onRequestListener)
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE)
-        if (connectivityManager is ConnectivityManager) {
-            var link: LinkProperties =  connectivityManager.getLinkProperties(connectivityManager.activeNetwork) as LinkProperties
-            println(link.linkAddresses.toString())
+            override fun onRequestShowToast(errorMessage: String) {
+                Toast.makeText(this@MainActivity,errorMessage,Toast.LENGTH_LONG).show()
+            }
+            override fun onFindServer(){
+                binding.searchServerProgressBar.visibility = View.VISIBLE
+                binding.searchServerTextView.visibility = View.GONE
+            }
         }
+        httpRequestManager = HttpRequestManager(applicationContext,client,onRequestListener)
         setScanSetting()
         CoroutineScope(Dispatchers.Main).launch {
             httpRequestManager.requestOnCreate()
@@ -233,4 +246,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+       */
 }
