@@ -2,30 +2,40 @@ package com.example.aproboticksapp
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Point
 import android.graphics.PointF
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
+import com.example.aproboticksapp.forGson.ConstructorTypeAdapterFactory
+import com.google.gson.GsonBuilder
 import glm_.func.common.abs
+import kotlin.math.sign
+
 
 class AproboticsOpenGLView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) :
     GLSurfaceView(context, attrs) {
-    val renderer = AproboticsOpenGLRenderer(context)
+    val fileInputStream = context.assets.open("1.json")
+    val gson = GsonBuilder().registerTypeAdapterFactory(ConstructorTypeAdapterFactory).create()
+    val visObj = gson.fromJson(fileInputStream.bufferedReader(), VisualisationObject::class.java)
+    val renderer = AproboticsOpenGLRenderer(context, visObj.listBoxes, visObj.bin)
     val scaleDetector =
         ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(scaleGestureDetector: ScaleGestureDetector): Boolean {
-                renderer.mScaleFactor *= scaleGestureDetector.getScaleFactor();
-                renderer.mScaleFactor = Math.max(0.5f, Math.min(renderer.mScaleFactor, 2f));
+                val scaleFactor = Math.max(0.5f, Math.min((scaleGestureDetector.getScaleFactor().let{ it ->
+                    2-it
+                }), 2f));
+                println(scaleFactor)
+                renderer.camera.scale(scaleFactor)
                 return true
             }
         })
     var currentTouchState = 0
-    var startTouch: PointF? = null
+    var startTouchOneFinger: PointF? = null
+    var startTouchTwoFinger: PointF? = null
 
     init {
         setEGLContextClientVersion(2)
@@ -40,30 +50,43 @@ class AproboticsOpenGLView @JvmOverloads constructor(
                 MotionEvent.ACTION_DOWN -> {
                     if (event.pointerCount == 1) {
                         currentTouchState = 1
-                        startTouch = PointF(event.x, event.y)
+                        startTouchOneFinger = PointF(event.x, event.y)
                     }
                 }
 
                 MotionEvent.ACTION_POINTER_DOWN -> {
                     if (event.pointerCount == 2) {
                         currentTouchState = 2
+                        startTouchTwoFinger = PointF(event.x, event.y)
                     }
                 }
 
                 MotionEvent.ACTION_MOVE -> {
                     when (currentTouchState) {
                         1 -> {
-                            if (startTouch != null) {
+                            if (startTouchOneFinger != null) {
                                 renderer.apply {
-                                    translateX = (event.x - startTouch!!.x) /width
-                                    transLateY = -(event.y - startTouch!!.y)/height
-                                    calculateRotation()
+                                    val translateX = ((event.x - startTouchOneFinger!!.x) / width)
+                                    val translateY = -(event.y - startTouchOneFinger!!.y) / height
+                                    renderer.camera.rotateSphere(translateX, translateY)
                                 }
                             }
                         }
-
                         2 -> {
-                            scaleDetector.onTouchEvent(event)
+                            if (startTouchTwoFinger != null) {
+                                renderer.apply {
+                                    val translateX =
+                                        (event.x - startTouchTwoFinger!!.x) / width.run {
+                                            sign * (this.abs + 1)
+                                        }
+                                    val translateY =
+                                        -(event.y - startTouchTwoFinger!!.y) / height.run {
+                                            sign * (this.abs + 1)
+                                        }
+                                    renderer.camera.translateCamera(translateX, translateY)
+                                    scaleDetector.onTouchEvent(event)
+                                }
+                            }
                         }
                     }
                 }

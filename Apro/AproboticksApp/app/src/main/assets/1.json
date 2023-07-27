@@ -1,0 +1,43 @@
+{
+  "status": true,
+  "listBoxes": [
+    {
+      "name": "Crate#0000166",
+      "position": {
+        "x": 11.0,
+        "y": 10.0,
+        "z": 10.0
+      },
+      "width": 20.0,
+      "height": 20.0,
+      "depth": 20.0
+    },
+    {
+      "name": "Crate#0000169",
+      "position": {
+        "x": 61.0,
+        "y": 40.0,
+        "z": 40.0
+      },
+      "width": 80.0,
+      "height": 80.0,
+      "depth": 80.0
+    },
+    {
+      "name": "Crate#0000168",
+      "position": {
+        "x": 501.0,
+        "y": 400.0,
+        "z": 400.0
+      },
+      "width": 800.0,
+      "height": 800.0,
+      "depth": 800.0
+    }
+  ],
+  "bin": {
+    "width": 1000.0,
+    "height": 1000.0,
+    "depth": 1000.0
+  }
+}
