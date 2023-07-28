@@ -1,4 +1,4 @@
-package com.example.aproboticksapp
+package com.example.aproboticksapp.opengl.utils
 
 import android.opengl.GLES20
 import android.opengl.GLES20.*
@@ -12,6 +12,7 @@ class ShaderUtils {
             }
             glShaderSource(shaderId, vertexShaderTextCode)
             glCompileShader(shaderId)
+            val log = glGetShaderInfoLog(shaderId)
             val compileStatus = IntArray(1)
             glGetShaderiv(shaderId, GL_COMPILE_STATUS, compileStatus, 0)
             if (compileStatus[0] == 0) {
@@ -28,6 +29,7 @@ class ShaderUtils {
             }
             glShaderSource(fragmentId, fragmentShaderText)
             glCompileShader(fragmentId)
+            val log = glGetShaderInfoLog(fragmentId)
             val compileStatus = IntArray(1)
             glGetShaderiv(fragmentId, GL_COMPILE_STATUS, compileStatus, 0)
             if (compileStatus[0] == GL_FALSE) {

@@ -1,10 +1,11 @@
-package ru.startandroid.l175texture;
+package com.example.aproboticksapp.opengl.utils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.util.Base64;
 
 import static android.opengl.GLES20.GL_TEXTURE0;
 import static android.opengl.GLES20.GL_TEXTURE_2D;
@@ -15,7 +16,7 @@ import static android.opengl.GLES20.glGenTextures;
 
 public class TextureUtils {
 
-    public static int loadTexture(Context context, int resourceId) {
+    public static int loadTexture(Context context, String img) {
         // создание объекта текстуры
         final int[] textureIds = new int[1];
         glGenTextures(1, textureIds, 0);
@@ -27,8 +28,7 @@ public class TextureUtils {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false;
 
-        final Bitmap bitmap = BitmapFactory.decodeResource(
-                context.getResources(), resourceId, options);
+        final Bitmap bitmap = convertStringToBitmap(img);
 
         if (bitmap == null) {
             glDeleteTextures(1, textureIds, 0);
@@ -47,8 +47,14 @@ public class TextureUtils {
         bitmap.recycle();
 
         // сброс target
-        glBindTexture(GL_TEXTURE_2D, 0);
 
         return textureIds[0];
+    }
+    public static Bitmap convertStringToBitmap(String string){
+        byte[] byteArray1;
+        byteArray1 = Base64.decode(string, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(
+                byteArray1, 0,
+                byteArray1.length );
     }
 }

@@ -1,4 +1,4 @@
-package com.example.aproboticksapp
+package com.example.aproboticksapp.opengl
 
 import glm_.func.common.abs
 import glm_.glm
@@ -24,7 +24,6 @@ class Camera(_eyeVec3: Vec3, centerVec3: Vec3) {
     var roll = 0f
     var yaw = 0f
     var eyeVec3: Vec3 by Delegates.observable(Vec3(_eyeVec3)) { _, _, newValue ->
-        upLocalVec3 = glm.cross(guideVec3, rightLocalVec3).normalize()
         mViewMatrix = glm.lookAt(newValue, newValue - guideVec3, upLocalVec3)
         /*mLinearOperatorMatrix = rightLocalVec3.let {
             upLocalVec3.run {
@@ -57,7 +56,7 @@ class Camera(_eyeVec3: Vec3, centerVec3: Vec3) {
 
 
     init {
-        this.guideVec3 = _eyeVec3 - centerVec3
+        this.guideVec3 = (_eyeVec3 - centerVec3).normalize() *10
         this.eyeVec3 = _eyeVec3
         pitch = asin(guideVec3.run { z / length() })
         roll = guideVec3.run{
@@ -96,7 +95,7 @@ class Camera(_eyeVec3: Vec3, centerVec3: Vec3) {
         eyeVec3 = eyeVec3 + newEye
     }
     fun scale(scaleFactor:Float){
-        guideVec3 = (guideVec3 * scaleFactor)
+        eyeVec3 = eyeVec3 + (guideVec3 * (if(scaleFactor>1)scaleFactor else -scaleFactor )*10)
     }
 
 }

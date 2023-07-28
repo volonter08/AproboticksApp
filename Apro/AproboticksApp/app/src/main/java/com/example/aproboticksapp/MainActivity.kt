@@ -1,27 +1,10 @@
 package com.example.aproboticksapp
 
-import android.content.Context
-import android.content.Intent
-import android.net.ConnectivityManager
-import android.net.LinkProperties
-import android.net.wifi.WifiManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.view.View
-import android.widget.Toast
-import androidx.fragment.app.commit
 import androidx.lifecycle.MutableLiveData
-import com.example.aproboticksapp.databinding.ActivityMainBinding
-import com.example.aproboticksapp.fragments.*
-import com.example.aproboticksapp.network.Utils
-import com.example.aproboticksapp.requests.HttpRequestManager
-import com.example.aproboticksapp.requests.OnRequestListener
-import com.example.aproboticksapp.websocket.WebSocketManager
-import com.google.gson.GsonBuilder
-import kotlinx.coroutines.*
+import com.example.aproboticksapp.opengl.AproboticsOpenGLView
 import okhttp3.*
-import kotlin.math.absoluteValue
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -56,7 +39,7 @@ class MainActivity : AppCompatActivity() {
    //val webSocketManager =
       //  WebSocketManager(client, onActivityReceiveMessage = ::onActivityReceiveMessage)
    // lateinit var httpRequestManager: HttpRequestManager
-   lateinit var glSurfaceView:AproboticsOpenGLView
+   lateinit var glSurfaceView: AproboticsOpenGLView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         glSurfaceView = AproboticsOpenGLView(this)

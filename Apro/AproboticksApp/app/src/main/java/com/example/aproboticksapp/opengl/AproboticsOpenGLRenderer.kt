@@ -1,4 +1,4 @@
-package com.example.aproboticksapp
+package com.example.aproboticksapp.opengl
 
 import android.content.Context
 import android.opengl.GLES20.GL_COLOR_BUFFER_BIT
@@ -6,22 +6,29 @@ import android.opengl.GLES20.GL_DEPTH_BUFFER_BIT
 import android.opengl.GLES20.GL_DEPTH_TEST
 import android.opengl.GLES20.GL_FLOAT
 import android.opengl.GLES20.GL_LINE_STRIP
+import android.opengl.GLES20.GL_MAX_TEXTURE_IMAGE_UNITS
+import android.opengl.GLES20.GL_TEXTURE_2D
 import android.opengl.GLES20.GL_TRIANGLE_STRIP
+import android.opengl.GLES20.glBindTexture
 import android.opengl.GLES20.glClear
 import android.opengl.GLES20.glClearColor
 import android.opengl.GLES20.glDrawArrays
 import android.opengl.GLES20.glEnable
 import android.opengl.GLES20.glEnableVertexAttribArray
 import android.opengl.GLES20.glGetAttribLocation
+import android.opengl.GLES20.glGetIntegerv
 import android.opengl.GLES20.glGetUniformLocation
 import android.opengl.GLES20.glLineWidth
-import android.opengl.GLES20.glUniform4f
+import android.opengl.GLES20.glUniform1i
 import android.opengl.GLES20.glUniformMatrix4fv
 import android.opengl.GLES20.glUseProgram
 import android.opengl.GLES20.glVertexAttribPointer
 import android.opengl.GLES20.glViewport
 import android.opengl.GLSurfaceView.Renderer
 import android.opengl.Matrix
+import com.example.aproboticksapp.R
+import com.example.aproboticksapp.opengl.utils.ShaderUtils
+import com.example.aproboticksapp.opengl.utils.TextureUtils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -30,21 +37,37 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import glm_.vec3.Vec3
 
-class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<Box>,val bin:Bin) : Renderer {
+class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<Box>, val bin: Bin) :
+    Renderer {
+    companion object {
+        const val FLOAT_SIZE = 4
+        const val STRIDE_VERTEX_DATA = 4 * FLOAT_SIZE
+    }
 
     var mProjectionMatrix = FloatArray(16)
     var mResultMatrix = FloatArray(16)
     lateinit var vertexData: FloatBuffer
     lateinit var fragmentData: FloatBuffer
+    lateinit var textureData: FloatBuffer
     var width = 0
     var height = 0
     var program = 0
+
     //for camera
-    val camera = Camera(centerVec3 = Vec3(0, 0, 0), _eyeVec3 = Vec3(-bin.width, -bin.height, bin.depth))
+    val camera =
+        Camera(centerVec3 = Vec3(0, 0, 0), _eyeVec3 = Vec3(-bin.width, -bin.height, bin.depth))
+    var vertexId = 0f
+
+    //for locations
+    var aTextureLocation = 0
 
     //for data
     val listForVertexData = LinkedList<Float>()
     val listForFragmentData = LinkedList<Float>()
+    val listForTextureData = LinkedList<Float>()
+
+    //for texture
+    var listTextureId = emptyList<Int>()
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         glEnable(GL_DEPTH_TEST)
         glClearColor(0f, 0f, 0f, 0f)
@@ -54,6 +77,9 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
         prepareDataForBoxes()
         putDataInBuffers()
         bindData()
+        val cnt = IntArray(1)
+        glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, cnt, 0)
+        cnt[0]
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -114,45 +140,47 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
             box.position.y + box.height / 2,
             box.position.z - box.depth / 2
         )
-        val listForBorderBox = listOf(
+        val listFrontFacesBox = listOf<VertexBox>(
             leftTopFront,
             leftBottomFront,
-            rightBottomFront,
-            rightTopFront,
-            leftTopFront,
             rightTopFront,
             rightBottomFront,
-            rightBottomBack,
-            rightTopBack,
+
+            )
+        val listRightFacesBox = listOf<VertexBox>(
             rightTopFront,
+            rightBottomFront,
             rightTopBack,
             rightBottomBack,
-            leftBottomBack,
+
+            )
+        val listBackFacesBox = listOf<VertexBox>(
+            rightTopBack,
+            rightBottomBack,
             leftTopBack,
-            rightTopBack,
-            leftTopBack,
             leftBottomBack,
-            leftBottomFront,
-            leftTopFront,
-            leftTopBack
-        )
-        val listSideFacesBox = listOf<VertexBox>(
-            leftTopFront,
-            leftBottomFront,
-            rightTopFront,
-            rightBottomFront,
-            rightTopBack,
-            rightBottomBack,
+
+            )
+        val listLeftFacesBox = listOf<VertexBox>(
             leftTopBack,
             leftBottomBack,
             leftTopFront,
             leftBottomFront
         )
-        val listTopFacesBox =
-            listOf(leftTopFront, rightTopFront, leftTopBack, rightTopBack)
-        val listBottomFacesBox =
-            listOf(leftBottomFront, rightBottomFront, leftBottomBack, rightBottomBack)
-        prepareDataForBox(listSideFacesBox, listTopFacesBox, listBottomFacesBox, listForBorderBox)
+        val listTopFacesBox = listOf(
+            leftTopBack, leftTopFront, rightTopBack, rightTopFront)
+        val listBottomFacesBox = listOf(
+            leftBottomFront, leftBottomBack, rightBottomFront, rightBottomBack
+        )
+
+        prepareDataForBox(
+            listFrontFacesBox,
+            listRightFacesBox,
+            listBackFacesBox,
+            listLeftFacesBox,
+            listTopFacesBox,
+            listBottomFacesBox
+        )
     }
 
     fun initShadersAndProgram() {
@@ -190,7 +218,7 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
         var bottom = -1.0f
         var top = 1.0f
         val near = 1f
-        val far = 10000f
+        val far = 100000f
         if (width > height) {
             ratio = (height.toFloat() / width.toFloat())
             top *= ratio
@@ -222,35 +250,69 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
     }
 
     private fun prepareDataForBox(
-        listSideFacesBox: List<VertexBox>,
+        listFrontFacesBox: List<VertexBox>,
+        listRightFacesBox: List<VertexBox>,
+        listBackFacesBox: List<VertexBox>,
+        listLeftFacesBox: List<VertexBox>,
         listTopFacesBox: List<VertexBox>,
-        listBottomFacesBox: List<VertexBox>,
-        listForBorderBox: List<VertexBox>
+        listBottomFacesBox: List<VertexBox>
     ) {
         listForVertexData.apply {
-            listSideFacesBox.forEach {
+            listFrontFacesBox.forEach {
                 add(it.x)
                 add(it.y)
                 add(it.z)
+                add(vertexId++)
+            }
+
+            listRightFacesBox.forEach {
+                add(it.x)
+                add(it.y)
+                add(it.z)
+                add(vertexId++)
+            }
+            listBackFacesBox.forEach {
+                add(it.x)
+                add(it.y)
+                add(it.z)
+                add(vertexId++)
+            }
+            listLeftFacesBox.forEach {
+                add(it.x)
+                add(it.y)
+                add(it.z)
+                add(vertexId++)
             }
             listTopFacesBox.forEach {
                 add(it.x)
                 add(it.y)
                 add(it.z)
+                add(vertexId++)
             }
             listBottomFacesBox.forEach {
                 add(it.x)
                 add(it.y)
                 add(it.z)
-            }
-            listForBorderBox.forEach {
-                add(it.x)
-                add(it.y)
-                add(it.z)
+                add(vertexId++)
             }
         }.toFloatArray()
         listForFragmentData.apply {
-            listSideFacesBox.forEach {
+            listFrontFacesBox.forEach {
+                add(1f)
+                add(0f)
+                add(0.5f)
+            }
+            listRightFacesBox.forEach {
+                add(1f)
+                add(0f)
+                add(0.5f)
+            }
+            listBackFacesBox.forEach {
+                add(1f)
+                add(0f)
+                add(0.5f)
+            }
+            listLeftFacesBox.forEach {
                 add(1f)
                 add(0f)
                 add(0.5f)
@@ -265,36 +327,55 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
                 add(0f)
                 add(0.5f)
             }
-            listForBorderBox.forEach {
-                add(1f)
-                add(1f)
-                add(1f)
-            }
         }.toFloatArray()
+        for(i in(0..5)){
+            listForTextureData.addAll(listOf(0f, 0f, 0f, 1f, 1f, 0f, 1f, 1f))
+        }
     }
 
     private fun putDataInBuffers() {
         vertexData =
             ByteBuffer.allocateDirect(listForVertexData.size * 4).order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-        vertexData.put(listForVertexData.toFloatArray())
+                .asFloatBuffer().apply {
+                    put(listForVertexData.toFloatArray())
+                }
         fragmentData =
             ByteBuffer.allocateDirect(listForFragmentData.size * 4).order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-        fragmentData.put(listForFragmentData.toFloatArray())
+                .asFloatBuffer().apply {
+                    put(listForFragmentData.toFloatArray())
+                }
+        textureData =
+            ByteBuffer.allocateDirect(listForTextureData.size * 4).order(ByteOrder.nativeOrder())
+                .asFloatBuffer().apply {
+                    put(listForTextureData.toFloatArray())
+                }
+        listTextureId = listBox.map {
+            TextureUtils.loadTexture(context,it.img)
+        }
     }
 
     private fun bindData() {
-        val uColor = glGetUniformLocation(program, "u_Color")
-        glUniform4f(uColor, 0f, 0f, 1f, 1f)
+        val uTextureUnitLocation = glGetUniformLocation(program, "u_Texture");
         val aPositionLocation = glGetAttribLocation(program, "a_Position")
         val aColor = glGetAttribLocation(program, "a_Color")
+        val aVertexId = glGetAttribLocation(program, "a_Vertex_Id")
+        aTextureLocation = glGetAttribLocation(program, "a_TexCoord");
         vertexData.position(0)
-        glVertexAttribPointer(aPositionLocation, 3, GL_FLOAT, false, 0, vertexData)
+        glVertexAttribPointer(aPositionLocation, 3, GL_FLOAT, false, STRIDE_VERTEX_DATA, vertexData)
         glEnableVertexAttribArray(aPositionLocation)
+        vertexData.position(3)
+        glVertexAttribPointer(aVertexId, 1, GL_FLOAT, false, STRIDE_VERTEX_DATA, vertexData)
+        glEnableVertexAttribArray(aVertexId)
         fragmentData.position(0)
         glVertexAttribPointer(aColor, 3, GL_FLOAT, false, 0, fragmentData)
         glEnableVertexAttribArray(aColor)
+        textureData.position(0)
+        glVertexAttribPointer(aTextureLocation, 2, GL_FLOAT, false, 0, textureData)
+        glEnableVertexAttribArray(aTextureLocation)
+
+
+        // юнит текстуры
+        glUniform1i(uTextureUnitLocation, 0);
     }
 
     private fun prepareDataForAxes() {
@@ -315,16 +396,19 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
                 add(it.x)
                 add(it.y)
                 add(it.z)
+                add(vertexId++)
             }
             arrayForAxeY.forEach {
                 add(it.x)
                 add(it.y)
                 add(it.z)
+                add(vertexId++)
             }
             arrayForAxeZ.forEach {
                 add(it.x)
                 add(it.y)
                 add(it.z)
+                add(vertexId++)
             }
         }
         listForFragmentData.apply {
@@ -345,6 +429,7 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
             }
         }
     }
+
     private fun prepareDataForBin() {
         val listForBorderBin = bin.run {
             listOf(
@@ -375,6 +460,7 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
                 add(it.x)
                 add(it.y)
                 add(it.z)
+                add(vertexId++)
             }
         }
         listForFragmentData.apply {
@@ -387,6 +473,11 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
     }
 
     private fun prepareDataForBoxes() {
+        listForTextureData.apply {
+            for (i in (0..25)) {
+                addAll(listOf(0f, 0f))
+            }
+        }
         listBox.forEach {
             initDataForBox(it)
         }
@@ -404,8 +495,8 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
 
     private fun drawBoxes() {
         for (i in listBox.indices) {
-            glDrawArrays(GL_TRIANGLE_STRIP, 26 + i * 38, 18)
-            glDrawArrays(GL_LINE_STRIP, 44 + i * 38, 20)
+            glBindTexture(GL_TEXTURE_2D, listTextureId[i]);
+            glDrawArrays(GL_TRIANGLE_STRIP, 26 + i * 24, 24)
         }
     }
 }
