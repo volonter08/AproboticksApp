@@ -63,7 +63,6 @@ class SignInFragment(val httpRequestManager: HttpRequestManager) : Fragment() {
         }
         val intentFilter = IntentFilter(MainActivity.BROADCAST_ACTION)
         requireContext().registerReceiver(signInFragmentReceiver, intentFilter)
-        testRequest()
         return signInFragmentBinding.root
     }
     suspend fun authorization(id:String,onOpenMaterialDialog:(User)->Unit,onOpenWithRepeatingAuthorization:()->Unit ) {

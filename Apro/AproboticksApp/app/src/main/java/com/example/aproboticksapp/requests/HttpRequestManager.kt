@@ -25,7 +25,7 @@ class HttpRequestManager(
     }
 
     val prefs = context.getSharedPreferences("application", Context.MODE_PRIVATE)
-    var ipServer = "10.241.211.12"
+    var ipServer = prefs.getString("ip_server", "") ?: ""
     var httpURL = "http://$ipServer:$PORT/"
 
     suspend fun receiveJSONObjectOnCreate(): JSONObject? {
@@ -82,7 +82,7 @@ class HttpRequestManager(
         val urlLogin = httpURL + "API/login"
         val formBody: RequestBody = FormBody.Builder()
             .add("id", id)
-            .add("ip", "10.241.95.34")
+            .add("ip", Utils.getIPAddress(true))
             .build()
         val request = Request.Builder().url(urlLogin).post(formBody).build()
         lateinit var response: Response

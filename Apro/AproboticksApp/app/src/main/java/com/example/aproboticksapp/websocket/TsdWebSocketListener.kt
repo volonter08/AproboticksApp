@@ -15,14 +15,9 @@ import org.json.JSONException
 import org.json.JSONObject
 
 
-class TsdWebSocketListener(val context:Context, val onReceiveMessage: (Int)->Unit) : okhttp3.WebSocketListener() {
+class TsdWebSocketListener(val onReceiveMessage: (Int)->Unit) : okhttp3.WebSocketListener() {
     val gson = GsonBuilder().create()
-    val ip= "10.241.95.34"
-    init {
-        val wifiManager =  context.getSystemService(WIFI_SERVICE) as WifiManager;
-        val ip = Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
-        println(ip)
-    }
+    val ip= Utils.getIPAddress(true)
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
         Log.d("OOO","onOpen")

@@ -31,7 +31,6 @@ class ReceivingFragment(val httpRequestManager: HttpRequestManager) : Fragment()
         }
         val intentFilter = IntentFilter(MainActivity.BROADCAST_ACTION)
         requireContext().registerReceiver(receiveFragmentReceiver, intentFilter)
-        testRequest()
         return receivingBinding.root
     }
     override fun onDestroyView() {
