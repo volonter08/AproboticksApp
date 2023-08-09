@@ -46,7 +46,7 @@ class AllowedActionsFragment(val user: User?,val httpRequestManager: HttpRequest
         }
         pageOfAllowedActionsBinding.receiveMcButton.setOnClickListener {
             activity?.supportFragmentManager?.commit {
-                replace(R.id.fragment_container_view_tag,ReceivingFragment())
+                replace(R.id.fragment_container_view_tag,ReceivingFragment(httpRequestManager))
                 addToBackStack("receiving_fragment")
             }
         }

@@ -1,9 +1,29 @@
 package com.example.aproboticksapp
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.widget.Toast
+import androidx.fragment.app.commit
 import androidx.lifecycle.MutableLiveData
+import com.example.aproboticksapp.databinding.ActivityMainBinding
+import com.example.aproboticksapp.fragments.AllowedActionsFragment
+import com.example.aproboticksapp.fragments.FromComputerFragment
+import com.example.aproboticksapp.fragments.OpenGlFragment
+import com.example.aproboticksapp.fragments.SignInFragment
+import com.example.aproboticksapp.network.Utils
 import com.example.aproboticksapp.opengl.AproboticsOpenGLView
+import com.example.aproboticksapp.opengl.Bin
+import com.example.aproboticksapp.opengl.Box
+import com.example.aproboticksapp.requests.HttpRequestManager
+import com.example.aproboticksapp.requests.OnRequestListener
+import com.example.aproboticksapp.websocket.WebSocketManager
+import com.google.gson.GsonBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import okhttp3.*
 
 class MainActivity : AppCompatActivity() {
@@ -36,20 +56,12 @@ class MainActivity : AppCompatActivity() {
 
     var isBusyTsd = MutableLiveData<Boolean>()
     val client = OkHttpClient()
-   //val webSocketManager =
-      //  WebSocketManager(client, onActivityReceiveMessage = ::onActivityReceiveMessage)
-   // lateinit var httpRequestManager: HttpRequestManager
-   lateinit var glSurfaceView: AproboticsOpenGLView
+    val webSocketManager =
+        WebSocketManager(client, onActivityReceiveMessage = ::onActivityReceiveMessage)
+    lateinit var httpRequestManager: HttpRequestManager
+    lateinit var glSurfaceView: AproboticsOpenGLView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        glSurfaceView = AproboticsOpenGLView(this)
-        setContentView(glSurfaceView)
-    }
-    override fun onResume() {
-        super.onResume()
-        glSurfaceView.onResume()
-    }
-      /*  super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         val onRequestListener = object : OnRequestListener {
@@ -62,7 +74,7 @@ class MainActivity : AppCompatActivity() {
                 user: User?
             ) {
                 if (status) {
-                    webSocketManager.connectWebSocket(id,ipServer)
+                    webSocketManager.connectWebSocket(id, ipServer)
                     if (isComp) {
                         GlobalScope.launch(Dispatchers.Main) {
                             supportFragmentManager.commit {
@@ -86,7 +98,7 @@ class MainActivity : AppCompatActivity() {
                             supportFragmentManager.commit {
                                 replace(
                                     R.id.fragment_container_view_tag,
-                                    AllowedActionsFragment(user,httpRequestManager)
+                                    AllowedActionsFragment(user, httpRequestManager)
                                 )
                             }
                         }
@@ -95,14 +107,24 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onRequestShowToast(errorMessage: String) {
-                Toast.makeText(this@MainActivity,errorMessage,Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MainActivity, errorMessage, Toast.LENGTH_LONG).show()
             }
-            override fun onFindServer(){
+
+            override fun onFindServer() {
                 binding.searchServerProgressBar.visibility = View.VISIBLE
                 binding.searchServerTextView.visibility = View.GONE
             }
+            override fun onVisualiseBin(listBox:List<Box>, bin: Bin){
+                supportFragmentManager.commit {
+                    replace(
+                        R.id.fragment_container_view_tag,
+                        OpenGlFragment(listBox,bin)
+                    )
+                    addToBackStack("opengl_fragment")
+                }
+            }
         }
-        httpRequestManager = HttpRequestManager(applicationContext,client,onRequestListener)
+        httpRequestManager = HttpRequestManager(applicationContext, client, onRequestListener)
         setScanSetting()
         CoroutineScope(Dispatchers.Main).launch {
             httpRequestManager.requestOnCreate()
@@ -113,8 +135,9 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         val gson = GsonBuilder().create()
         val ip = Utils.getIPAddress(true)
-        webSocketManager.webSocket?.send( gson.toJson(CodeObject(11, DataObject(ip))))
+        webSocketManager.webSocket?.send(gson.toJson(CodeObject(11, DataObject(ip))))
     }
+
     fun setScanSetting() {
         for (key in (TRIGGER_KEY)) {
             val intentTriggerButton = Intent();
@@ -221,7 +244,8 @@ class MainActivity : AppCompatActivity() {
                     FromComputerFragment(webSocketManager)
                 )
             }
-            1010->supportFragmentManager.commit {
+
+            1010 -> supportFragmentManager.commit {
                 replace(
                     R.id.fragment_container_view_tag,
                     SignInFragment(httpRequestManager)
@@ -229,6 +253,4 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-       */
 }

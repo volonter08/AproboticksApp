@@ -4,8 +4,13 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import com.example.aproboticksapp.User
+import com.example.aproboticksapp.forGson.ConstructorTypeAdapterFactory
 import com.example.aproboticksapp.network.Utils
+import com.example.aproboticksapp.opengl.VisualisationObject
+import com.example.aproboticksapp.opengl.utils.TextureUtils.convertStringToBitmap
+import com.example.aproboticksapp.websocket.TsdStatusWebSocket.Companion.gson
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import kotlinx.coroutines.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -35,7 +40,7 @@ class HttpRequestManager(
             try {
                 response = client.newCall(request).execute()
             } catch (e: java.lang.Exception) {
-                withContext(Dispatchers.Main){
+                withContext(Dispatchers.Main) {
                     onRequestListener.onFindServer()
                 }
                 findServer()
@@ -172,7 +177,8 @@ class HttpRequestManager(
             .add("amount", amount.toString())
             .build()
 
-        val request = Request.Builder().url(urlLogout).patch(("{\"amount\":$amount}").toRequestBody("application/json".toMediaType())).build()
+        val request = Request.Builder().url(urlLogout)
+            .patch(("{\"amount\":$amount}").toRequestBody("application/json".toMediaType())).build()
         GlobalScope.launch(Dispatchers.IO) {
             client.newCall(request).execute().use { response ->
                 response.body?.string()?.let {
@@ -194,7 +200,8 @@ class HttpRequestManager(
         val formBody: RequestBody = FormBody.Builder()
             .add("cell", idCell.toString())
             .build()
-        val request = Request.Builder().url(urlLogout).patch(("{\"cell\":$idCell}").toRequestBody("application/json".toMediaType())).build()
+        val request = Request.Builder().url(urlLogout)
+            .patch(("{\"cell\":$idCell}").toRequestBody("application/json".toMediaType())).build()
         GlobalScope.launch(Dispatchers.IO) {
             client.newCall(request).execute().use { response ->
                 response.body?.string()?.let {
@@ -207,6 +214,31 @@ class HttpRequestManager(
                         }
                     }
                 }
+            }
+        }
+    }
+
+    fun requestPositionBoxes(idCrate: String) {
+        GlobalScope.launch(Dispatchers.IO) {
+            val gson =
+                GsonBuilder().registerTypeAdapterFactory(ConstructorTypeAdapterFactory).create()
+            val formBody =
+                RequestBody.create("application/json".toMediaType(), "{\"id\":\"$idCrate\"}")
+            val request = Request.Builder()
+                .url(httpURL + "API/crate-positioning")
+                .post(formBody).build()
+            val response = client.newCall(request).execute()
+            val jsonData = response.body?.string()
+            try {
+                val visualisationObject = jsonData?.let {
+                    gson.fromJson(it, VisualisationObject::class.java)
+                }
+                if (visualisationObject != null)
+                    onRequestListener.onVisualiseBin(
+                        visualisationObject.listBoxes,
+                        visualisationObject.bin
+                    )
+            } catch (_: Exception) {
             }
         }
     }
