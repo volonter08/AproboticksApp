@@ -19,6 +19,7 @@ import com.example.aproboticksapp.opengl.Box
 import com.example.aproboticksapp.requests.HttpRequestManager
 import com.example.aproboticksapp.requests.OnRequestListener
 import com.example.aproboticksapp.websocket.WebSocketManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,14 +57,15 @@ class MainActivity : AppCompatActivity() {
 
     var isBusyTsd = MutableLiveData<Boolean>()
     val client = OkHttpClient()
-    val webSocketManager =
-        WebSocketManager(client, onActivityReceiveMessage = ::onActivityReceiveMessage)
+    lateinit var webSocketManager:WebSocketManager
     lateinit var httpRequestManager: HttpRequestManager
     lateinit var glSurfaceView: AproboticsOpenGLView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        webSocketManager =
+            WebSocketManager(applicationContext,client, onActivityReceiveMessage = ::onActivityReceiveMessage)
         val onRequestListener = object : OnRequestListener {
             override fun onRequestOnCreate(
                 ipServer: String,
@@ -112,16 +114,23 @@ class MainActivity : AppCompatActivity() {
 
             override fun onFindServer() {
                 binding.searchServerProgressBar.visibility = View.VISIBLE
-                binding.searchServerTextView.visibility = View.GONE
             }
-            override fun onVisualiseBin(listBox:List<Box>, bin: Bin){
-                supportFragmentManager.commit {
-                    replace(
-                        R.id.fragment_container_view_tag,
-                        OpenGlFragment(listBox,bin)
-                    )
-                    addToBackStack("opengl_fragment")
-                }
+            override fun onPutCrate(listBox:List<Box>, bin: Bin){
+                MaterialAlertDialogBuilder(this@MainActivity)
+                    .setTitle("Положение коробки")
+                    .setMessage("Расположите коробку в ячейке ${bin.id}")
+                    .setNegativeButton("Визуализировать ячейку") { dialog, which ->
+                        supportFragmentManager.commit {
+                            replace(
+                                R.id.fragment_container_view_tag,
+                                OpenGlFragment(listBox,bin)
+                            )
+                            addToBackStack("opengl_fragment")
+                        }
+                    }
+                    .setPositiveButton("ОК") { dialog, which ->
+                    }
+                    .show()
             }
         }
         httpRequestManager = HttpRequestManager(applicationContext, client, onRequestListener)
@@ -154,7 +163,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         val gson = GsonBuilder().create()
-        val ip = Utils.getIPAddress(true)
+        val ip = "10.241.95.34"
         webSocketManager.webSocket?.send(gson.toJson(CodeObject(101, DataObject(ip))))
         super.onStop()
     }

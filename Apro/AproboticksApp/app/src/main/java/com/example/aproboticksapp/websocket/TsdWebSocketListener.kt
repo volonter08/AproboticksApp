@@ -1,5 +1,9 @@
 package com.example.aproboticksapp.websocket
 
+import android.content.Context
+import android.content.Context.WIFI_SERVICE
+import android.net.wifi.WifiManager
+import android.text.format.Formatter
 import android.util.Log
 import com.example.aproboticksapp.CodeObject
 import com.example.aproboticksapp.DataObject
@@ -11,9 +15,14 @@ import org.json.JSONException
 import org.json.JSONObject
 
 
-class TsdWebSocketListener( val onReceiveMessage: (Int)->Unit) : okhttp3.WebSocketListener() {
+class TsdWebSocketListener(val context:Context, val onReceiveMessage: (Int)->Unit) : okhttp3.WebSocketListener() {
     val gson = GsonBuilder().create()
-    val ip = Utils.getIPAddress(true)
+    val ip= "10.241.95.34"
+    init {
+        val wifiManager =  context.getSystemService(WIFI_SERVICE) as WifiManager;
+        val ip = Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
+        println(ip)
+    }
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
         Log.d("OOO","onOpen")

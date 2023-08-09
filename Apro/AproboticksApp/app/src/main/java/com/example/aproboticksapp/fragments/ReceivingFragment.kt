@@ -26,14 +26,21 @@ class ReceivingFragment(val httpRequestManager: HttpRequestManager) : Fragment()
             override fun onReceive(context: Context?, intent: Intent?) {
                 val idCrate = intent?.getStringExtra("EXTRA_BARCODE_DECODING_DATA")
                 httpRequestManager.requestPositionBoxes(idCrate!!)
+
             }
         }
         val intentFilter = IntentFilter(MainActivity.BROADCAST_ACTION)
         requireContext().registerReceiver(receiveFragmentReceiver, intentFilter)
+        testRequest()
         return receivingBinding.root
     }
     override fun onDestroyView() {
         requireContext().unregisterReceiver(receiveFragmentReceiver)
         super.onDestroyView()
+    }
+    private fun testRequest(){
+        val intent = Intent(MainActivity.BROADCAST_ACTION)
+        intent.putExtra("EXTRA_BARCODE_DECODING_DATA","0003106")
+        requireContext().sendBroadcast(intent)
     }
 }

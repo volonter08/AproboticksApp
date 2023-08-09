@@ -69,7 +69,7 @@
                     android:layout_marginHorizontal="14dp"
                     android:inputType="number"
                     android:background="@android:color/transparent"
-                    android:hint="Введите кол-во деталей"
+                    android:hint="Введите номер ячейки"
                     android:maxLines="1" />
             </LinearLayout>
             <com.google.android.material.button.MaterialButton

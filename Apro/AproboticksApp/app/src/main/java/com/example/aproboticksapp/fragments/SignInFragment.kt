@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import com.example.aproboticksapp.*
 import com.example.aproboticksapp.MainActivity.Companion.ACTION_OPEN_SCAN
+import com.example.aproboticksapp.MainActivity.Companion.BROADCAST_ACTION
 import com.example.aproboticksapp.MainActivity.Companion.KEYCODE_FRONT_BUTTON
 import com.example.aproboticksapp.MainActivity.Companion.SCANKEY
 import com.example.aproboticksapp.databinding.SignInFragmentBinding
@@ -62,6 +63,7 @@ class SignInFragment(val httpRequestManager: HttpRequestManager) : Fragment() {
         }
         val intentFilter = IntentFilter(MainActivity.BROADCAST_ACTION)
         requireContext().registerReceiver(signInFragmentReceiver, intentFilter)
+        testRequest()
         return signInFragmentBinding.root
     }
     suspend fun authorization(id:String,onOpenMaterialDialog:(User)->Unit,onOpenWithRepeatingAuthorization:()->Unit ) {
@@ -94,5 +96,10 @@ class SignInFragment(val httpRequestManager: HttpRequestManager) : Fragment() {
         intentTurnOn.setAction(ACTION_OPEN_SCAN);
         intentTurnOn.putExtra(SCANKEY, KEYCODE_FRONT_BUTTON);
         context?.sendBroadcast(intentTurnOn);
+    }
+    private fun testRequest(){
+        val intent = Intent(BROADCAST_ACTION)
+        intent.putExtra("EXTRA_BARCODE_DECODING_DATA","1111111")
+        requireContext().sendBroadcast(intent)
     }
 }
