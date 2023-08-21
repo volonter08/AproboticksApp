@@ -20,7 +20,6 @@ class TsdWebSocketListener(val onReceiveMessage: (Int)->Unit) : okhttp3.WebSocke
     val ip= Utils.getIPAddress(true)
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
-        Log.d("OOO","onOpen")
         webSocket.send( gson.toJson(CodeObject(11, DataObject(ip))))
     }
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -51,7 +50,6 @@ class TsdWebSocketListener(val onReceiveMessage: (Int)->Unit) : okhttp3.WebSocke
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         webSocket.send( gson.toJson(CodeObject(101, DataObject(ip))))
-        Log.d("OOO", "onFailure: ${t.message} $response")
         super.onFailure(webSocket, t, response)
     }
 }

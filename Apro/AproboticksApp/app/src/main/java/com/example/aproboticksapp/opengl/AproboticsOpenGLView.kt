@@ -2,24 +2,13 @@ package com.example.aproboticksapp.opengl
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.PointF
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
-import android.util.Base64
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
-import com.example.aproboticksapp.forGson.ConstructorTypeAdapterFactory
-import com.example.aproboticksapp.requests.HttpRequestManager
-import com.google.gson.GsonBuilder
+import com.example.aproboticksapp.opengl.renderer.AproboticsOpenGLRenderer
 import glm_.func.common.abs
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import java.io.ByteArrayOutputStream
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.math.sign
 
 

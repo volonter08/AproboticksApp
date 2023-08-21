@@ -23,10 +23,7 @@ class AllowedActionsFragment(val user: User?,val httpRequestManager: HttpRequest
         val pageOfAllowedActionsBinding = PageOfAllowedActionsBinding.inflate(inflater)
         pageOfAllowedActionsBinding.logout.visibility = View.VISIBLE
         pageOfAllowedActionsBinding.logout.setOnClickListener {
-            httpRequestManager.requestLogout()
-            activity?.supportFragmentManager?.commit {
-                replace(R.id.fragment_container_view_tag,SignInFragment(httpRequestManager))
-            }
+            httpRequestManager.requestLogout(user!!.id)
         }
         user?.also{
             when{
@@ -46,20 +43,20 @@ class AllowedActionsFragment(val user: User?,val httpRequestManager: HttpRequest
         }
         pageOfAllowedActionsBinding.receiveMcButton.setOnClickListener {
             activity?.supportFragmentManager?.commit {
-                replace(R.id.fragment_container_view_tag,ReceivingFragment(httpRequestManager))
-                addToBackStack("receiving_fragment")
+                replace(R.id.fragment_container_view_tag,ReceivingFragment(httpRequestManager),"receiving_fragment")
+                addToBackStack(null)
             }
         }
         pageOfAllowedActionsBinding.takeOffMcButton.setOnClickListener {
             activity?.supportFragmentManager?.commit {
-                replace(R.id.fragment_container_view_tag,TakingOffFragment(httpRequestManager))
-                addToBackStack("taking_off_fragment")
+                replace(R.id.fragment_container_view_tag,TakingOffFragment(httpRequestManager),"taking_off_fragment")
+                addToBackStack(null)
             }
         }
         pageOfAllowedActionsBinding.replaceMc.setOnClickListener {
             activity?.supportFragmentManager?.commit {
-                replace(R.id.fragment_container_view_tag,ReplacingFragment(httpRequestManager))
-                addToBackStack("taking_off_fragment")
+                replace(R.id.fragment_container_view_tag,ReplacingFragment(httpRequestManager),"replacing_fragment")
+                addToBackStack(null)
             }
         }
         return pageOfAllowedActionsBinding.root

@@ -1,4 +1,4 @@
-package com.example.aproboticksapp.opengl
+package com.example.aproboticksapp.opengl.renderer
 
 import android.content.Context
 import android.opengl.GLES20.GL_COLOR_BUFFER_BIT
@@ -27,6 +27,11 @@ import android.opengl.GLES20.glViewport
 import android.opengl.GLSurfaceView.Renderer
 import android.opengl.Matrix
 import com.example.aproboticksapp.R
+import com.example.aproboticksapp.opengl.Bin
+import com.example.aproboticksapp.opengl.Box
+import com.example.aproboticksapp.opengl.Camera
+import com.example.aproboticksapp.opengl.Position
+import com.example.aproboticksapp.opengl.VertexBox
 import com.example.aproboticksapp.opengl.utils.ShaderUtils
 import com.example.aproboticksapp.opengl.utils.TextureUtils
 import java.nio.ByteBuffer

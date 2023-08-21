@@ -12,9 +12,11 @@ import androidx.fragment.app.Fragment
 import com.example.aproboticksapp.MainActivity
 import com.example.aproboticksapp.databinding.RecieveFragmentBinding
 import com.example.aproboticksapp.requests.HttpRequestManager
+import java.util.LinkedList
 
 class ReceivingFragment(val httpRequestManager: HttpRequestManager) : Fragment() {
     private lateinit var receiveFragmentReceiver: BroadcastReceiver
+    private var lockedCratesList= LinkedList<Int>()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -25,8 +27,7 @@ class ReceivingFragment(val httpRequestManager: HttpRequestManager) : Fragment()
         receiveFragmentReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 val idCrate = intent?.getStringExtra("EXTRA_BARCODE_DECODING_DATA")
-                httpRequestManager.requestPositionBoxes(idCrate!!)
-
+                httpRequestManager.requestPositionCrate(idCrate!!,lockedCratesList)
             }
         }
         val intentFilter = IntentFilter(MainActivity.BROADCAST_ACTION)
@@ -39,7 +40,7 @@ class ReceivingFragment(val httpRequestManager: HttpRequestManager) : Fragment()
     }
     private fun testRequest(){
         val intent = Intent(MainActivity.BROADCAST_ACTION)
-        intent.putExtra("EXTRA_BARCODE_DECODING_DATA","0003106")
+        intent.putExtra("EXTRA_BARCODE_DECODING_DATA","00100")
         requireContext().sendBroadcast(intent)
     }
 }

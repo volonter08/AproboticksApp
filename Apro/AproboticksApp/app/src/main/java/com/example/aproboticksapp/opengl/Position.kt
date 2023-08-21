@@ -1,3 +1,5 @@
 package com.example.aproboticksapp.opengl
 
-data class Position(val x:Float, val y:Float, val z:Float)
+import java.io.Serializable
+
+data class Position(val x:Float, val y:Float, val z:Float):Serializable

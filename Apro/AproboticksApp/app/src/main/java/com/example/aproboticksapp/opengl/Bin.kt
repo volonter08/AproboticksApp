@@ -2,13 +2,28 @@ package com.example.aproboticksapp.opengl
 
 import com.example.aproboticksapp.forGson.Read
 import com.example.aproboticksapp.forGson.ReadAs
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 data class Bin @Read constructor(
-    @ReadAs("id") val id: Int,
-    @ReadAs("width") val width: Float,
-    @ReadAs("height") val height: Float,
-    @ReadAs("depth") val depth: Float
-) {
+    @ReadAs("id")
+    @SerializedName("id ")
+    @Expose
+    val id: Int,
+    @ReadAs("width")
+    @SerializedName("width ")
+    @Expose
+    val width: Float,
+    @ReadAs("height")
+    @SerializedName("height ")
+    @Expose
+    val height: Float,
+    @ReadAs("depth")
+    @SerializedName("height ")
+    @Expose
+    val depth: Float
+):Serializable {
     val leftBottomFront = VertexBox(
         0f,
         0f,

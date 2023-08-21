@@ -1,3 +1,5 @@
 package com.example.aproboticksapp.opengl
 
-data class VertexBox(val x:Float,val y:Float,val z:Float)
+import java.io.Serializable
+
+data class VertexBox(val x:Float,val y:Float,val z:Float):Serializable

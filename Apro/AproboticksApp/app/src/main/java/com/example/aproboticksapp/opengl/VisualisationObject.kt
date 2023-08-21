@@ -7,4 +7,5 @@ data class VisualisationObject(
     val status: Boolean,
     val listBoxes: List<Box>,
     val bin: Bin,
+    val error:String?=null
 )

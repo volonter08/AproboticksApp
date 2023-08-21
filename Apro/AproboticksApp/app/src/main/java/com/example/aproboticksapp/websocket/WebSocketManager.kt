@@ -9,6 +9,7 @@ import com.example.aproboticksapp.DataObject
 import com.example.aproboticksapp.R
 import com.example.aproboticksapp.fragments.FromComputerFragment
 import com.example.aproboticksapp.network.Utils
+import com.example.aproboticksapp.requests.HttpRequestManager.Companion.PORT
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -21,7 +22,7 @@ class WebSocketManager(val client:OkHttpClient,val onActivityReceiveMessage:(Int
     var webSocket: WebSocket? = null
 
     private fun createWebSocketRequest(id: String,ipServer:String): Request {
-        val websocketURL = "ws://$ipServer:8000/ws/THD-ws/$id"
+        val websocketURL = "ws://$ipServer:$PORT/ws/THD-ws/$id"
         return Request.Builder()
             .url(websocketURL)
             .build()
@@ -42,7 +43,6 @@ class WebSocketManager(val client:OkHttpClient,val onActivityReceiveMessage:(Int
 
             }
             1001 -> {
-
             }
         }
     }

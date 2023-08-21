@@ -1,31 +1,38 @@
 package com.example.aproboticksapp
 
+import com.example.aproboticksapp.R
+import android.content.DialogInterface.BUTTON_POSITIVE
+import android.content.DialogInterface.OnShowListener
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
+import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
-import androidx.lifecycle.MutableLiveData
+import androidx.fragment.app.commitNow
 import com.example.aproboticksapp.databinding.ActivityMainBinding
 import com.example.aproboticksapp.fragments.AllowedActionsFragment
 import com.example.aproboticksapp.fragments.FromComputerFragment
+import com.example.aproboticksapp.fragments.LoadingFragment
 import com.example.aproboticksapp.fragments.OpenGlFragment
 import com.example.aproboticksapp.fragments.SignInFragment
 import com.example.aproboticksapp.network.Utils
-import com.example.aproboticksapp.opengl.AproboticsOpenGLView
 import com.example.aproboticksapp.opengl.Bin
 import com.example.aproboticksapp.opengl.Box
 import com.example.aproboticksapp.requests.HttpRequestManager
 import com.example.aproboticksapp.requests.OnRequestListener
 import com.example.aproboticksapp.websocket.WebSocketManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.*
+import java.io.Serializable
+import java.util.concurrent.TimeUnit
+
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -52,15 +59,18 @@ class MainActivity : AppCompatActivity() {
             KEYCODE_LEFT_TRIGGER_BUTTON,
             KEYCODE_RIGHT_TRIGGER_BUTTON
         )
-
     }
-
-    var isBusyTsd = MutableLiveData<Boolean>()
-    val client = OkHttpClient()
-    val webSocketManager:WebSocketManager =
-        WebSocketManager(client, onActivityReceiveMessage = ::onActivityReceiveMessage)
+    val client:OkHttpClient
+    val webSocketManager: WebSocketManager
     lateinit var httpRequestManager: HttpRequestManager
-    lateinit var glSurfaceView: AproboticsOpenGLView
+    init {
+        val builder = OkHttpClient.Builder()
+        builder.connectTimeout(10,TimeUnit.SECONDS) // connect timeout
+            .writeTimeout(30, TimeUnit.SECONDS) // write timeout
+            .readTimeout(30, TimeUnit.SECONDS) // read timeout
+        client = builder.build()
+        webSocketManager = WebSocketManager(client, onActivityReceiveMessage = ::onActivityReceiveMessage)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
@@ -77,29 +87,27 @@ class MainActivity : AppCompatActivity() {
                 if (status) {
                     webSocketManager.connectWebSocket(id, ipServer)
                     if (isComp) {
-                        GlobalScope.launch(Dispatchers.Main) {
-                            supportFragmentManager.commit {
-                                replace(
-                                    R.id.fragment_container_view_tag,
-                                    FromComputerFragment(
-                                        webSocketManager
-                                    )
+                        supportFragmentManager.commit {
+                            replace(
+                                R.id.fragment_container_view_tag,
+                                FromComputerFragment(
+                                    webSocketManager
                                 )
-                            }
+                            )
                         }
                     } else {
                         if (!isLoggedIn)
                             supportFragmentManager.commit {
                                 replace(
                                     R.id.fragment_container_view_tag,
-                                    SignInFragment(httpRequestManager)
+                                    SignInFragment(httpRequestManager),"login_fragment"
                                 )
                             }
                         else {
                             supportFragmentManager.commit {
                                 replace(
                                     R.id.fragment_container_view_tag,
-                                    AllowedActionsFragment(user, httpRequestManager)
+                                    AllowedActionsFragment(user, httpRequestManager),"allowed_action_fragment"
                                 )
                             }
                         }
@@ -107,36 +115,130 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            override fun onRequestShowToast(errorMessage: String) {
-                Toast.makeText(this@MainActivity, errorMessage, Toast.LENGTH_LONG).show()
-            }
-
-            override fun onFindServer() {
-                binding.searchServerProgressBar.visibility = View.VISIBLE
-            }
-            override fun onPutCrate(listBox:List<Box>, bin: Bin){
-                MaterialAlertDialogBuilder(this@MainActivity)
-                    .setTitle("Положение коробки")
-                    .setMessage("Расположите коробку в ячейке ${bin.id}")
-                    .setNegativeButton("Визуализировать ячейку") { dialog, which ->
-                        supportFragmentManager.commit {
-                            replace(
-                                R.id.fragment_container_view_tag,
-                                OpenGlFragment(listBox,bin)
-                            )
-                            addToBackStack("opengl_fragment")
+            override fun onError(errorMessage: String) {
+                supportFragmentManager.apply {
+                    if( findFragmentById(R.id.fragment_container_view_tag) == LoadingFragment) {
+                        commitNow {
+                            remove(LoadingFragment)
+                        }
+                        commitNow {
+                            findFragmentById(R.id.fragment_container_view_tag)?.let {
+                                show(it)
+                            }
                         }
                     }
-                    .setPositiveButton("ОК") { dialog, which ->
-                    }
-                    .show()
+                }
+                Snackbar.make(binding.root,errorMessage, Snackbar.LENGTH_LONG).setAction("OK",null).show()
             }
+            override fun onLoading() {
+                supportFragmentManager.commit {
+                    supportFragmentManager.findFragmentById(R.id.fragment_container_view_tag)?.let {
+                        hide(it)
+                    }
+                    add(
+                        R.id.fragment_container_view_tag,
+                        LoadingFragment,"loading_fragment"
+                    )
+                }
+            }
+
+            override fun onPutCrate(
+                listBox: List<Box>, bin: Bin,
+                idCrate: String,
+                lockedList: MutableList<Int>
+            ) {
+                supportFragmentManager.commitNow {
+                    remove(LoadingFragment)
+                    supportFragmentManager.findFragmentByTag("receiving_fragment")?.let {
+                        show(it)
+                    }
+                }
+                val dialog = MaterialAlertDialogBuilder(this@MainActivity)
+                    .setTitle("Положение коробки")
+                    .setMessage("Расположите коробку в ячейке ${bin.id}")
+                    .setNegativeButton("Выбрать другую ячейку") { _, _ ->
+                        lockedList.add(bin.id)
+                        httpRequestManager.requestPositionCrate(idCrate, lockedList)
+                    }
+                    .setPositiveButton("ОК") { _, _ ->
+                        httpRequestManager.requestRegisterCrate(idCrate, bin.id.toString())
+                    }
+                    .setNeutralButton("Визуализировать ячейку", null)
+                    .create()
+                dialog.setOnShowListener { dialog -> //
+                    val neutralButton: Button = (dialog as AlertDialog)
+                        .getButton(AlertDialog.BUTTON_NEUTRAL)
+                    neutralButton.setOnClickListener {
+                        val intent = Intent(this@MainActivity, OpenGLActivity::class.java).apply {
+                            putExtra("listBox", listBox as Serializable)
+                            putExtra("bin", bin as Serializable)
+                        }
+                        startActivity(intent)
+                    }
+                }
+                dialog.show()
+            }
+
+            override fun onGetUserData(user: User?) {
+                supportFragmentManager.commitNow {
+                    remove(LoadingFragment)
+                    supportFragmentManager.findFragmentByTag("login_fragment")?.let {
+                        show(it)
+                    }
+                }
+                if (user != null) {
+                    MaterialAlertDialogBuilder(this@MainActivity)
+                        .setTitle("Подтверждение")
+                        .setMessage("Войти как ${user.name} ")
+                        .setNegativeButton("НЕТ") { dialog, which ->
+                            Toast.makeText(this@MainActivity,"Пропуск считался некорректно,попробуйте отсканировать еще раз.", Toast.LENGTH_LONG).show()
+                        }
+                        .setPositiveButton("ДА") { dialog, which ->
+                            httpRequestManager.requestLogin(user)
+                        }
+                        .show()
+                }
+                else{
+                    Toast.makeText(this@MainActivity,"Пропуск считался некорректно,попробуйте отсканировать еще раз.", Toast.LENGTH_LONG).show()
+                }
+
+            }
+            override fun onLogin(user: User) {
+                supportFragmentManager.commit {
+                    replace(
+                        R.id.fragment_container_view_tag,
+                        AllowedActionsFragment(user, httpRequestManager)
+                    )
+                }
+            }
+
+            override fun onLogout() {
+                supportFragmentManager.commit {
+                    replace(
+                        R.id.fragment_container_view_tag,
+                        SignInFragment(httpRequestManager),"login_fragment"
+                    )
+                }
+            }
+            override fun onStopLoading() {
+                supportFragmentManager.apply {
+                    if( findFragmentById(R.id.fragment_container_view_tag) == LoadingFragment) {
+                        commitNow {
+                            remove(LoadingFragment)
+                        }
+                        commitNow {
+                            findFragmentById(R.id.fragment_container_view_tag)?.let {
+                                show(it)
+                            }
+                        }
+                    }
+                }
+            }
+
         }
         httpRequestManager = HttpRequestManager(applicationContext, client, onRequestListener)
         setScanSetting()
-        CoroutineScope(Dispatchers.Main).launch {
-            httpRequestManager.requestOnCreate()
-        }
+        httpRequestManager.requestOnCreate()
     }
 
     override fun onStart() {
@@ -165,7 +267,9 @@ class MainActivity : AppCompatActivity() {
         val ip = Utils.getIPAddress(true)
         webSocketManager.webSocket?.send(gson.toJson(CodeObject(101, DataObject(ip))))
         super.onStop()
-    }private fun onActivityReceiveMessage(code: Int) {
+    }
+
+    private fun onActivityReceiveMessage(code: Int) {
         when (code) {
             0 -> supportFragmentManager.commit {
                 replace(

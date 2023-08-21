@@ -77,4 +77,9 @@ class ReplacingFragment(val httpRequestManager: HttpRequestManager) : Fragment()
         requireContext().unregisterReceiver(replacingReceiver)
         super.onDestroyView()
     }
+    private fun testRequest(){
+        val intent = Intent(MainActivity.BROADCAST_ACTION)
+        intent.putExtra("EXTRA_BARCODE_DECODING_DATA","00098")
+        requireContext().sendBroadcast(intent)
+    }
 }
