@@ -95,7 +95,8 @@ class MainActivity : AppCompatActivity() {
                                 )
                             )
                         }
-                    } else {
+                    }
+                    else {
                         if (!isLoggedIn)
                             supportFragmentManager.commit {
                                 replace(

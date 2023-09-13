@@ -131,8 +131,7 @@ class HttpRequestManager(
                         }
                     }
                 }
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     onRequestListener.onError("Ошибка.Перезапустите приложение.")
                 }
@@ -389,6 +388,9 @@ class HttpRequestManager(
                 .post(requestBody).build()
             try {
                 client.newCall(request).execute()
+                withContext(Dispatchers.Main) {
+                    onRequestListener.onStopLoading()
+                }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     onRequestListener.onError()
