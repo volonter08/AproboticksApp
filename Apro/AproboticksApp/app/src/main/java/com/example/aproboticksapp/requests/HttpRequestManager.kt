@@ -65,8 +65,9 @@ class HttpRequestManager(
                 findServer()
                 try {
                     urlCheckBinding = httpURL + "API/THD-lock"
-                    response =
-                        client.newCall(Request.Builder().url(urlCheckBinding).build()).execute()
+                    response = client.newCall(
+                        Request.Builder().url(urlCheckBinding).build()
+                    ).execute()
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         onRequestListener.onError("Ошибка.Перезарузите приложение")
@@ -78,7 +79,7 @@ class HttpRequestManager(
                 val jsonObject = jsonData?.let {
                     JSONObject(it)
                 }
-                if (response.isSuccessful) {
+                if (response.isSuccessful){ //Проверка успешности выполнения
                     jsonObject?.apply {
                         val status = getBoolean("status")
                         val isComp = getBoolean("is_comp")
@@ -253,11 +254,12 @@ class HttpRequestManager(
         }
     }
 
-    fun requestTakeOff(id: String, amount: Int) {
+    fun requestTakeOff(id: String, amount: String, force: Boolean = false) {
         onRequestListener.onLoading()
         val urlLogout = httpURL + "API/crate/$id/"
         val request = Request.Builder().url(urlLogout)
-            .patch(("{\"amount\":$amount}").toRequestBody("application/json".toMediaType())).build()
+            .patch(("{\"amount\":$amount,\"force\":$force}").toRequestBody("application/json".toMediaType()))
+            .build()
         GlobalScope.launch(Dispatchers.IO) {
             try {
                 client.newCall(request).execute().use { response ->
@@ -266,8 +268,15 @@ class HttpRequestManager(
                         val status = jsonObject.getBoolean("status")
                         if (!status) {
                             val errorMessage = jsonObject.getString("error")
-                            withContext(Dispatchers.Main) {
-                                onRequestListener.onError(errorMessage = errorMessage)
+                            if (errorMessage == "Количество снимаемых деталей больше предполагаемого") {
+                                val difAmount = jsonObject.getInt("difAmount")
+                                withContext(Dispatchers.Main) {
+                                    onRequestListener.onOverTaking(id, amount, difAmount)
+                                }
+                            } else {
+                                withContext(Dispatchers.Main) {
+                                    onRequestListener.onError(errorMessage = errorMessage)
+                                }
                             }
                         } else {
                             withContext(Dispatchers.Main) {

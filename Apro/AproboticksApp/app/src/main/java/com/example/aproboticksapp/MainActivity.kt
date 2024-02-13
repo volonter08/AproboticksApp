@@ -236,6 +236,18 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+            override fun onOverTaking(idCrate: String, amount: String, difAmount: Int) {
+                onStopLoading()
+                MaterialAlertDialogBuilder(this@MainActivity)
+                    .setMessage("Количество снимаемых деталей больше допустимого на $difAmount.Подтвердить действие?")
+                    .setNegativeButton("НЕТ"){dialog,which->
+                    }
+                    .setPositiveButton("ДА") { dialog, which ->
+                        httpRequestManager.requestTakeOff(idCrate,amount,true)
+                    }
+                    .show()
+            }
+
         }
         httpRequestManager = HttpRequestManager(applicationContext, client, onRequestListener)
         setScanSetting()

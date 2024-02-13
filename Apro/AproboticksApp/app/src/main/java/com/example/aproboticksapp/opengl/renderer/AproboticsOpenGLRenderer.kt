@@ -48,7 +48,6 @@ class AproboticsOpenGLRenderer(private val context: Context, val listBox: List<B
         const val FLOAT_SIZE = 4
         const val STRIDE_VERTEX_DATA = 4 * FLOAT_SIZE
     }
-
     var mProjectionMatrix = FloatArray(16)
     var mResultMatrix = FloatArray(16)
     lateinit var vertexData: FloatBuffer

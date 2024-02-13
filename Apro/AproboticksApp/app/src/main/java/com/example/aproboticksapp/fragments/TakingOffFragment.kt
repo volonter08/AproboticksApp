@@ -31,16 +31,6 @@ class TakingOffFragment(val httpRequestManager: HttpRequestManager) : Fragment()
         val adapter = ArrayAdapter<String>(
             requireContext(), android.R.layout.simple_dropdown_item_1line, simpleArray
         )
-        val filter =
-            InputFilter { src, start, end, d, dstart, dend ->
-                for (i in start until end) {
-                    if (src[i].code !in (48..57)) {
-                        return@InputFilter src.subSequence(start, i)
-                    }
-                }
-                return@InputFilter src.subSequence(start, end)
-            }
-        takeOffFragmentBinding.amountDetail.filters = arrayOf(filter)
         takeOffFragmentBinding.takeOffButton.setOnClickListener {
             when {
                 (idCrate == null) -> {
@@ -55,7 +45,7 @@ class TakingOffFragment(val httpRequestManager: HttpRequestManager) : Fragment()
                         .show()
                 }
                 else -> {
-                    httpRequestManager.requestTakeOff(idCrate!!,takeOffFragmentBinding.amountDetail.text.toString().toInt())
+                    httpRequestManager.requestTakeOff(idCrate!!,takeOffFragmentBinding.amountDetail.text.toString())
                     takeOffFragmentBinding.amountDetail.text.clear()
                     idCrate = null
                     takeOffFragmentBinding.idCrate.text = null

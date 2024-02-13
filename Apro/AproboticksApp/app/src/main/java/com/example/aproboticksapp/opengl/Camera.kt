@@ -25,14 +25,6 @@ class Camera(_eyeVec3: Vec3, centerVec3: Vec3) {
     var yaw = 0f
     var eyeVec3: Vec3 by Delegates.observable(Vec3(_eyeVec3)) { _, _, newValue ->
         mViewMatrix = glm.lookAt(newValue, newValue - guideVec3, upLocalVec3)
-        /*mLinearOperatorMatrix = rightLocalVec3.let {
-            upLocalVec3.run {
-                Mat3(floatArrayOf(it.x, it.y, it.z, x, y, z, guideVec3.x, guideVec3.y, guideVec3.z))
-            }
-        }.transpose()
-
-         */
-
     }
     var guideVec3: Vec3 by Delegates.observable(_eyeVec3 - centerVec3) { _, oldValue, newValue ->
         this.eyeVec3.apply {

@@ -15,8 +15,7 @@ import kotlin.math.sign
 class AproboticsOpenGLView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null, listBoxes: List<Box>?= null, bin: Bin? = null
-) :
-    GLSurfaceView(context, attrs) {
+) : GLSurfaceView(context, attrs) {
     val renderer = AproboticsOpenGLRenderer(context,listBoxes!!,bin!!)
     val scaleDetector =
         ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -39,7 +38,6 @@ class AproboticsOpenGLView @JvmOverloads constructor(
         setRenderer(renderer)
         renderMode = RENDERMODE_CONTINUOUSLY
     }
-
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         if (event != null) {
@@ -50,14 +48,12 @@ class AproboticsOpenGLView @JvmOverloads constructor(
                         startTouchOneFinger = PointF(event.x, event.y)
                     }
                 }
-
                 MotionEvent.ACTION_POINTER_DOWN -> {
                     if (event.pointerCount == 2) {
                         currentTouchState = 2
                         startTouchTwoFinger = PointF(event.x, event.y)
                     }
                 }
-
                 MotionEvent.ACTION_MOVE -> {
                     when (currentTouchState) {
                         1 -> {

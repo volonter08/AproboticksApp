@@ -13,4 +13,5 @@ interface OnRequestListener {
     fun onLogin(user:User)
     fun onLogout()
     fun onStopLoading()
+    fun onOverTaking(idCrate: String,amount:String,difAmount:Int)
 }
